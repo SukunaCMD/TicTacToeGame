@@ -9,26 +9,25 @@ object Engine {
     }
   }
 
-  case class Game(board: TacBoard, winningPatterns: WinningPatterns, boardSize: Int,
-                  playerO: IndexedSeq[Point], playerX: IndexedSeq[Point], curTurn: Player) {
-
+  case class Game(board: TacBoard, winningPatterns: WinningPatterns, curTurn: Player) {
     def addMove(point: Point): Game = curTurn match {
-      case Player(O) => this.copy(board = board.update(point, curTurn.mark),
-          playerO = playerO :+ point, curTurn = curTurn.nextTurn)
-
-      case Player(X) => this.copy(board = board.update(point, curTurn.mark),
-          playerX = playerX :+ point, curTurn = curTurn.nextTurn)
+      case Player(O) => this.copy(board = board.update(point, curTurn.mark), curTurn = curTurn.nextTurn)
+      case Player(X) => this.copy(board = board.update(point, curTurn.mark), curTurn = curTurn.nextTurn)
     }
 
-    def curPlayer: IndexedSeq[Point] = curTurn match {
-      case Player(O) => playerO
-      case Player(X) => playerX
+    def getP(mark: Mark): IndexedSeq[Point] = {
+      board.cells.foldRight(IndexedSeq[Point]()){ (a,b) =>
+        if(a._2==mark) b:+a._1 else b
+      }
+    }
+    def prevPlayer: IndexedSeq[Point] = curTurn match {
+      case Player(O) => getP(X)
+      case Player(X) => getP(O)
     }
     def checkWin: Boolean = {
       val winningSequences = winningPatterns.winList
       for(subset <- winningSequences)
-        if(subset.intersect(curPlayer)==subset) return true
-
+        if(subset.intersect(prevPlayer)==subset) return true
       false
     }
   }

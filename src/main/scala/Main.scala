@@ -15,7 +15,7 @@ object Main {
     val boardSize = askBoardSize
     val winningPatterns = WinningPatterns(boardSize)
     val board = TacBoard(initCells(boardSize))
-    val game = Game(board, winningPatterns, boardSize, IndexedSeq(), IndexedSeq(), Player(O))
+    val game = Game(board, winningPatterns, Player(O))
     gameLoop(game)
   }
 }
