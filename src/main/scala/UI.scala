@@ -1,5 +1,6 @@
 import Engine.Board._
 import Engine._
+import cats.effect.IO
 
 import scala.io.StdIn.{readInt, readLine}
 
@@ -21,11 +22,30 @@ object UI  {
     }
   }
 
-  def gameLoop(game: Game): Unit = {
-    printBoard(game.board.cells)
+  def loop(game: Game): IO[Unit] = {
+    for {
+      _ <- IO{printBoard(game.board)}
+      userMove <- IO {boardPos}
+      auth <- IO {emptyPos(game, userMove)}.flatMap{
+        a: Input => a match {
+          case Reset => loop(game)
+          case Continue => IO{addMove(userMove, game)}.flatMap {
+            case (_, Victory) => IO {
+
+              System.exit(0)
+            }
+            case (game, Continue) => loop(game)
+          }
+        }
+      }
+    } yield auth
+  }
+
+  def gameLoopNoIO(game: Game): Unit = {
+    printBoard(game.board)
     val move = boardPos
     emptyPos(game, move) match {
-      case Reset => println("Unempty pos. Try new pos."); gameLoop(game)
+      case Reset => println("Unempty pos. Try new pos."); gameLoopNoIO(game)
       case Continue => println("Filling.")
     }
     val (newGame, inp) = addMove(move, game)
@@ -33,7 +53,7 @@ object UI  {
       case Victory => println("You win man gj gl"); System.exit(0)
       case Continue => println("The game will continue.")
     }
-    gameLoop(newGame)
+    gameLoopNoIO(newGame)
   }
 
   def boardPos: Point = {

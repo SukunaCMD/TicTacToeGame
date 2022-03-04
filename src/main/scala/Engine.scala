@@ -93,10 +93,10 @@ object Engine {
       }
     }
 
-    def printBoard(board: Cells): Unit = {
+    def printBoard(gameBoard: TacBoard): Unit = {
+      val board = gameBoard.cells
       val size = Math.sqrt(board.size).toInt
       val seps = "-" * 8 * size
-
       println(seps)
 
       for (row <- 1 to size) {
