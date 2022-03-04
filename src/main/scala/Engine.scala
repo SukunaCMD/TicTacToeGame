@@ -102,7 +102,6 @@ object Engine {
       for (row <- 1 to size) {
         for (col <- 1 to size) {
           val curCell = board(Point(row, col))
-
           printf("| %4s ", curCell)
         }
         println("|")

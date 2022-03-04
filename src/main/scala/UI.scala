@@ -1,6 +1,6 @@
 import Engine.Board._
 import Engine._
-import cats.effect.IO
+import cats.effect.{ExitCode, IO}
 
 import scala.io.StdIn.{readInt, readLine}
 
@@ -22,49 +22,37 @@ object UI  {
     }
   }
 
-  def loop(game: Game): IO[Unit] = {
-    for {
-      _ <- IO{printBoard(game.board)}
-      userMove <- IO {boardPos}
-      auth <- IO {emptyPos(game, userMove)}.flatMap{
-        a: Input => a match {
-          case Reset => loop(game)
-          case Continue => IO{addMove(userMove, game)}.flatMap {
-            case (_, Victory) => IO {
-
-              System.exit(0)
-            }
-            case (game, Continue) => loop(game)
-          }
+  def gameLoop(game: Game): IO[Unit] = {
+    IO.pure(printBoard(game.board))
+    getPosInp.flatMap{
+      pt: Point => emptyPos(game, pt) match {
+        case Reset => gameLoop(game)
+        case Continue => addMove(pt, game) match {
+          case (_, Victory) => IO.println("Victor!!!").as(ExitCode(1))
+          case (game, Continue) => gameLoop(game)
         }
       }
-    } yield auth
-  }
-
-  def gameLoopNoIO(game: Game): Unit = {
-    printBoard(game.board)
-    val move = boardPos
-    emptyPos(game, move) match {
-      case Reset => println("Unempty pos. Try new pos."); gameLoopNoIO(game)
-      case Continue => println("Filling.")
     }
-    val (newGame, inp) = addMove(move, game)
-    inp match{
-      case Victory => println("You win man gj gl"); System.exit(0)
-      case Continue => println("The game will continue.")
+  }
+
+  def getPosInp: IO[Point] = {
+    IO.println("Row, col?") >> IO.readLine.flatMap{
+      row => isAllDigits(row) match {
+        case true => IO.readLine.flatMap{
+          col => isAllDigits(col) match {
+            case true => IO.pure(Point(row.toInt, col.toInt))
+            case false => getPosInp
+          }
+        }
+        case false => getPosInp
+      }
     }
-    gameLoopNoIO(newGame)
   }
 
-  def boardPos: Point = {
-    println("Where would you like to place your Mark?")
-    println("row: ")
-    val row = readInt()
-    println("col: ")
-    val col = readInt()
-    Point(row, col)
-  }
 
+
+
+  def isAllDigits(s: String) = s.forall(Character.isDigit)
 
   sealed trait Input
   case object Reset extends Input
