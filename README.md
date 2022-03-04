@@ -1,2 +1,1 @@
-TicTacToe FP Learning experience
-Utilizes cats IO monad. 
+(NxN) TicTacToe game utilizing cats IO monad. 
