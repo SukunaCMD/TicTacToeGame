@@ -2,12 +2,8 @@ import Engine.Board._
 import Engine._
 import cats.effect.{ExitCode, IO}
 
-import scala.io.StdIn.{readInt, readLine}
-
-
 object UI  {
-  // for now the AI should just select randomly from point 1,1 to n,n based on available unfilled pos.
-  //
+
   def emptyPos(game: Game, pos: Point): Input = {
     val board = game.board.cells
     if(board(pos)!=Empty) Reset
@@ -23,8 +19,7 @@ object UI  {
   }
 
   def gameLoop(game: Game): IO[Unit] = {
-    IO.pure(printBoard(game.board))
-    getPosInp.flatMap{
+    IO.pure(printBoard(game.board)) >> getPosInp.flatMap{
       pt: Point => emptyPos(game, pt) match {
         case Reset => gameLoop(game)
         case Continue => addMove(pt, game) match {
